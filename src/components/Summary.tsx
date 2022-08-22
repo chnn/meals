@@ -56,6 +56,7 @@ function getByDateAndMeal(plan: Plan): {
       .map((r) => ({ name: r.name, servings: meal.servings }));
 
     result[meal.date][meal.meal].push(...recipeTitles);
+    result[meal.date][meal.meal].sort((a, b) => a.name.localeCompare(b.name));
   }
 
   return result;

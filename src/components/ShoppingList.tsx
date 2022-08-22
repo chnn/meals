@@ -54,19 +54,7 @@ function getShoppingList(plan: Plan): ShoppingList {
     }
   }
 
-  return Object.values(byKey).reduce<ShoppingList>(
-    (acc, { key, name, quantity, comment, units }) => [
-      ...acc,
-      {
-        key,
-        name,
-        quantity,
-        comment,
-        units,
-      },
-    ],
-    []
-  );
+  return Object.values(byKey).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 const LocalStorageCheckbox = dynamic<LocalStorageCheckboxProps>(

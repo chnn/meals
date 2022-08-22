@@ -68,7 +68,9 @@ const PlanPage: NextPage<{ plan: Plan }> = ({ plan }) => {
     Object.values(plan.meals).flatMap((meal) => meal.recipes)
   );
 
-  const recipes = [...recipeIds].map((recipeId) => plan.recipes[recipeId]);
+  const recipes = [...recipeIds]
+    .map((recipeId) => plan.recipes[recipeId])
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="">
