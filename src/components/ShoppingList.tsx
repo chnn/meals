@@ -70,8 +70,8 @@ export function ShoppingList({ plan }: { plan: Plan }) {
       <Table.Header>
         <Table.Row>
           <Table.Th className="w-9" />
-          <Table.Th className="w-28 text-right">Quantity</Table.Th>
-          <Table.Th>Item</Table.Th>
+          <Table.Th className="w-28 text-right"></Table.Th>
+          <Table.Th className="w-80">Ingredient</Table.Th>
           <Table.Th>Comment</Table.Th>
         </Table.Row>
       </Table.Header>

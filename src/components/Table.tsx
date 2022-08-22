@@ -1,35 +1,24 @@
-// FIXME
-/* eslint-disable react/display-name */
-
 import classNames from "./Table.module.css";
 
 type Children = JSX.Element | JSX.Element[] | string | number;
 
-export const Table = ({ children }: { children?: Children }) => {
-  return (
-    <div className="w-full overflow-x-scroll sm:p-5">
-      <table className="w-full table-fixed min-w-[600px]">{children}</table>
-    </div>
-  );
-};
-
-Table.Header = ({ children }: { children?: Children }) => {
+const Header = ({ children }: { children?: Children }) => {
   return <thead className="">{children}</thead>;
 };
 
-Table.Body = ({ children }: { children?: Children }) => {
+const Body = ({ children }: { children?: Children }) => {
   return <tbody className="">{children}</tbody>;
 };
 
-Table.Footer = ({ children }: { children?: Children }) => {
+const Footer = ({ children }: { children?: Children }) => {
   return <tfoot className="">{children}</tfoot>;
 };
 
-Table.Row = ({ children }: { children?: Children }) => {
+const Row = ({ children }: { children?: Children }) => {
   return <tr className="even:bg-slate-50">{children}</tr>;
 };
 
-Table.Th = ({
+const Th = ({
   children,
   className = "",
 }: {
@@ -45,7 +34,7 @@ Table.Th = ({
   );
 };
 
-Table.Td = ({
+const Td = ({
   children,
   className = "",
 }: {
@@ -60,3 +49,18 @@ Table.Td = ({
     </td>
   );
 };
+
+export const Table = ({ children }: { children?: Children }) => {
+  return (
+    <div className="w-full overflow-x-scroll sm:p-5">
+      <table className="w-full table-fixed min-w-[600px]">{children}</table>
+    </div>
+  );
+};
+
+Table.Header = Header;
+Table.Body = Body;
+Table.Footer = Footer;
+Table.Row = Row;
+Table.Th = Th;
+Table.Td = Td;

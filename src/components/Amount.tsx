@@ -5,5 +5,7 @@ export function Amount({
   quantity: number | null;
   units: string | null;
 }) {
-  return <>{quantity ? `${quantity}${units ? ` ${units}` : ""} ` : ""}</>;
+  return (
+    <span>{quantity ? `${quantity}${units ? ` ${units}` : ""} ` : ""}</span>
+  );
 }

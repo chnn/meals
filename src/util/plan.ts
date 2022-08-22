@@ -11,6 +11,7 @@ export type Recipe = {
   name: string;
   ingredients: string[];
   trivial: boolean;
+  servings: number;
 };
 
 export type Ingredient = {
@@ -23,6 +24,7 @@ export type Ingredient = {
 };
 
 export type Plan = {
+  name: string | null;
   meals: { [mealId: string]: Meal };
   recipes: { [recipeId: string]: Recipe };
   ingredients: { [ingredientId: string]: Ingredient };
@@ -45,6 +47,8 @@ const INGREDIENT_DEFAULTS = {
 
 export async function fetchPlan(planId: string): Promise<Plan> {
   const base = airtable.base(process.env.AIRTABLE_BASE!);
+
+  const planResp = await base.table("plans").find(planId);
 
   const mealsResp = await base
     .table("meals")
@@ -92,6 +96,7 @@ export async function fetchPlan(planId: string): Promise<Plan> {
   );
 
   return {
+    name: (planResp.fields.name as string | void) || null,
     meals,
     recipes,
     ingredients,

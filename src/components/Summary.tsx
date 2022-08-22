@@ -1,65 +1,50 @@
-import { Temporal } from "temporal-polyfill";
-
 import { Table } from "./Table";
-import { Plan } from "../util/plan";
+import { Plan, Recipe } from "../util/plan";
+import { formatPlainDate } from "../util/formatPlainDate";
 
-const DAY_LABELS: Record<number, string> = {
-  1: "Mon",
-  2: "Tue",
-  3: "Wed",
-  4: "Thu",
-  5: "Fri",
-  6: "Sat",
-  7: "Sun",
+type Report = {
+  [date: string]: {
+    breakfast: Recipe[];
+    lunch: Recipe[];
+    dinner: Recipe[];
+    totalCal: number;
+  };
 };
 
-const MONTH_LABELS: Record<number, string> = {
-  1: "Jan",
-  2: "Feb",
-  3: "Mar",
-  4: "Apr",
-  5: "May",
-  6: "Jun",
-  7: "Jul",
-  8: "Aug",
-  9: "Sep",
-  10: "Oct",
-  11: "Nov",
-  12: "Dec",
-};
-
-const formatPlainDate = (isoString: string): string => {
-  const plainDate = Temporal.PlainDate.from(isoString);
-  const formattedDate = `${DAY_LABELS[plainDate.dayOfWeek]}, ${
-    MONTH_LABELS[plainDate.month]
-  } ${plainDate.day}`;
-
-  return formattedDate;
-};
-
-function getByDateAndMeal(plan: Plan): {
-  [date: string]: { [meal: string]: Array<{ name: string; servings: number }> };
-} {
+function getByDateAndMeal(plan: Plan): Report {
   const result: ReturnType<typeof getByDateAndMeal> = {};
 
   for (const meal of Object.values(plan.meals)) {
     if (!result[meal.date]) {
-      result[meal.date] = {};
+      result[meal.date] = {
+        breakfast: [],
+        lunch: [],
+        dinner: [],
+        totalCal: 0,
+      };
     }
 
-    if (!result[meal.date][meal.meal]) {
-      result[meal.date][meal.meal] = [];
-    }
+    const recipes = meal.recipes.map((id) => plan.recipes[id]);
 
-    const recipeTitles = meal.recipes
-      .map((id) => plan.recipes[id])
-      .map((r) => ({ name: r.name, servings: meal.servings }));
-
-    result[meal.date][meal.meal].push(...recipeTitles);
+    result[meal.date][meal.meal].push(...recipes);
     result[meal.date][meal.meal].sort((a, b) => a.name.localeCompare(b.name));
+    result[meal.date].totalCal += recipes
+      .flatMap((r) => r.ingredients)
+      .map((id) => plan.ingredients[id])
+      .reduce((acc, ing) => acc + (ing.kcal || 0), 0);
   }
 
   return result;
+}
+
+function MealList({ recipes }: { recipes: Recipe[] }) {
+  return (
+    <ul className="list-disc list-inside">
+      {recipes.map(({ name }) => (
+        <li key={name}>{name}</li>
+      ))}
+    </ul>
+  );
 }
 
 export function Summary({ plan }: { plan: Plan }) {
@@ -70,9 +55,10 @@ export function Summary({ plan }: { plan: Plan }) {
       <Table.Header>
         <Table.Row>
           <Table.Th className="w-40">Date</Table.Th>
-          <Table.Th className="w-1/4">Breakfast</Table.Th>
-          <Table.Th className="w-1/4">Lunch</Table.Th>
-          <Table.Th className="w-1/4">Dinner</Table.Th>
+          <Table.Th>Breakfast</Table.Th>
+          <Table.Th>Lunch</Table.Th>
+          <Table.Th>Dinner</Table.Th>
+          <Table.Th className="w-28 text-right">Cal</Table.Th>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -80,27 +66,18 @@ export function Summary({ plan }: { plan: Plan }) {
           .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([date, meals], i) => (
             <Table.Row key={date}>
-              <Table.Td>{formatPlainDate(date)}</Table.Td>
+              <Table.Td>{formatPlainDate(date, { dayOfWeek: true })}</Table.Td>
               <Table.Td>
-                <ul className="list-disc">
-                  {meals.breakfast?.map(({ name, servings }) => (
-                    <li key={name}>{name}</li>
-                  ))}
-                </ul>
+                <MealList recipes={meals.breakfast} />
               </Table.Td>
               <Table.Td>
-                <ul className="list-disc">
-                  {meals.lunch?.map(({ name, servings }) => (
-                    <li key={name}>{name}</li>
-                  ))}
-                </ul>
+                <MealList recipes={meals.lunch} />
               </Table.Td>
               <Table.Td>
-                <ul className="list-disc">
-                  {meals.dinner?.map(({ name, servings }) => (
-                    <li key={name}>{name}</li>
-                  ))}
-                </ul>
+                <MealList recipes={meals.dinner} />
+              </Table.Td>
+              <Table.Td className="text-right">
+                {Math.round(meals.totalCal)}
               </Table.Td>
             </Table.Row>
           ))}

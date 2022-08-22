@@ -14,9 +14,9 @@ export function Recipe({ recipe, plan }: { recipe: Recipe; plan: Plan }) {
     <Table>
       <Table.Header>
         <Table.Row>
-          <Table.Th className="w-28 text-right">Quantity</Table.Th>
-          <Table.Th>Ingredient</Table.Th>
-          <Table.Th className="text-right">kcal</Table.Th>
+          <Table.Th className="w-28 text-right"></Table.Th>
+          <Table.Th className="w-80">Ingredient</Table.Th>
+          <Table.Th className="text-right">Cal</Table.Th>
         </Table.Row>
       </Table.Header>
       <Table.Body>
