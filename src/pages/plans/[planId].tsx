@@ -26,7 +26,7 @@ function Header({
 }) {
   if (level === 2) {
     return (
-      <h2 id={id} className={`text-3xl pb-5 pt-8 first:pt-0 ${className}`}>
+      <h2 id={id} className={`text-3xl px-5 pb-5 pt-8 first:pt-0 ${className}`}>
         {children}
       </h2>
     );
@@ -36,7 +36,7 @@ function Header({
     return (
       <h3
         id={id}
-        className={`text-xl pb-5 font-semibold pt-8 first:pt-0 ${className}`}
+        className={`text-xl px-5 pb-5 font-semibold pt-8 first:pt-0 ${className}`}
       >
         {children}
       </h3>
@@ -71,8 +71,8 @@ const PlanPage: NextPage<{ plan: Plan }> = ({ plan }) => {
   const recipes = [...recipeIds].map((recipeId) => plan.recipes[recipeId]);
 
   return (
-    <div className="p-5">
-      <ul className="list-disc list-inside">
+    <div className="">
+      <ul className="list-disc list-inside p-5">
         <li>
           <TocLink href="#summary">Summary</TocLink>
         </li>
@@ -108,9 +108,10 @@ const PlanPage: NextPage<{ plan: Plan }> = ({ plan }) => {
             <Header
               level={3}
               id={anchorForRecipe(r)}
-              className="flex items-bottom"
+              className="flex items-center"
             >
-              <Badge className="text-xs mr-2">1 serving</Badge> {r.name}
+              <Badge className="text-xs mr-3 flex-shrink-0">1 serving</Badge>{" "}
+              {r.name}
             </Header>
             <Recipe recipe={r} plan={plan} />
           </Fragment>

@@ -6,7 +6,11 @@ import classNames from "./Table.module.css";
 type Children = JSX.Element | JSX.Element[] | string | number;
 
 export const Table = ({ children }: { children?: Children }) => {
-  return <table className="w-full table-fixed">{children}</table>;
+  return (
+    <div className="w-full overflow-x-scroll sm:p-5">
+      <table className="w-full table-fixed min-w-[600px]">{children}</table>
+    </div>
+  );
 };
 
 Table.Header = ({ children }: { children?: Children }) => {
@@ -34,7 +38,7 @@ Table.Th = ({
 }) => {
   return (
     <th
-      className={`border-b border-zinc-300 font-medium py-1 px-3 first:pl-0 last:pr-0 text-left ${className}`}
+      className={`border-b border-zinc-300 font-medium py-1 px-3  text-left ${className}`}
     >
       {children}
     </th>
@@ -50,7 +54,7 @@ Table.Td = ({
 }) => {
   return (
     <td
-      className={`border-b border-zinc-100 py-1 px-3 first:pl-0 last:pr-0 text-left align-top ${className}`}
+      className={`border-b border-zinc-100 py-1 px-3 text-left align-top ${className}`}
     >
       {children}
     </td>
