@@ -70,8 +70,8 @@ export function ShoppingList({ plan }: { plan: Plan }) {
       <Table.Header>
         <Table.Row>
           <Table.Th className="w-9" />
-          <Table.Th className="w-28 text-right"></Table.Th>
-          <Table.Th className="w-80">Ingredient</Table.Th>
+          <Table.Th className="w-28" numeric></Table.Th>
+          <Table.Th className="w-64">Ingredient</Table.Th>
           <Table.Th>Comment</Table.Th>
         </Table.Row>
       </Table.Header>
@@ -82,7 +82,7 @@ export function ShoppingList({ plan }: { plan: Plan }) {
               <Table.Td>
                 <LocalStorageCheckbox itemKey={item.key} />
               </Table.Td>
-              <Table.Td className="text-right">
+              <Table.Td numeric>
                 <Amount quantity={item.quantity} units={item.units} />
               </Table.Td>
               <Table.Td>{item.name}</Table.Td>

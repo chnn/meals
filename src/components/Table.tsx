@@ -21,13 +21,17 @@ const Row = ({ children }: { children?: Children }) => {
 const Th = ({
   children,
   className = "",
+  numeric = false,
 }: {
   children?: Children;
   className?: string;
+  numeric?: boolean;
 }) => {
   return (
     <th
-      className={`border-b border-zinc-300 font-medium py-1 px-3  text-left ${className}`}
+      className={`border-b border-zinc-300 font-medium py-1 px-3 ${
+        numeric ? "text-right" : "text-left"
+      } ${className}`}
     >
       {children}
     </th>
@@ -37,13 +41,17 @@ const Th = ({
 const Td = ({
   children,
   className = "",
+  numeric = false,
 }: {
   children?: Children;
   className?: string;
+  numeric?: boolean;
 }) => {
   return (
     <td
-      className={`border-b border-zinc-100 py-1 px-3 text-left align-top ${className}`}
+      className={`border-b border-zinc-100 py-1 px-3 ${
+        numeric ? "text-right" : "text-left"
+      } align-top ${className}`}
     >
       {children}
     </td>

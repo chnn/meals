@@ -55,10 +55,13 @@ export function Summary({ plan }: { plan: Plan }) {
       <Table.Header>
         <Table.Row>
           <Table.Th className="w-40">Date</Table.Th>
-          <Table.Th>Breakfast</Table.Th>
-          <Table.Th>Lunch</Table.Th>
-          <Table.Th>Dinner</Table.Th>
-          <Table.Th className="w-28 text-right">Cal</Table.Th>
+          <Table.Th className="w-[20rem]">Breakfast</Table.Th>
+          <Table.Th className="w-[20rem]">Lunch</Table.Th>
+          <Table.Th className="w-[20rem]">Dinner</Table.Th>
+          <Table.Th className="w-28" numeric>
+            Cal
+          </Table.Th>
+          <Table.Th />
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -76,9 +79,8 @@ export function Summary({ plan }: { plan: Plan }) {
               <Table.Td>
                 <MealList recipes={meals.dinner} />
               </Table.Td>
-              <Table.Td className="text-right">
-                {Math.round(meals.totalCal)}
-              </Table.Td>
+              <Table.Td numeric>{Math.round(meals.totalCal)}</Table.Td>
+              <Table.Td />
             </Table.Row>
           ))}
       </Table.Body>
