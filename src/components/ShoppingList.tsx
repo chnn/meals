@@ -86,7 +86,9 @@ export function ShoppingList({ plan }: { plan: Plan }) {
                 <Amount quantity={item.quantity} units={item.units} />
               </Table.Td>
               <Table.Td>{item.name}</Table.Td>
-              <Table.Td>{item.comment}</Table.Td>
+              <Table.Td>
+                <em>{item.comment}</em>
+              </Table.Td>
             </Table.Row>
           );
         })}
