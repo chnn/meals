@@ -61,14 +61,6 @@ function getByDateAndMeal(plan: Plan): {
   return result;
 }
 
-function Servings({ n }: { n: number }) {
-  return (
-    <span className="rounded-sm bg-blue-100 text-zinc-700 text-xs py-0.5 px-1 font-semibold">
-      {n}&times;
-    </span>
-  );
-}
-
 export function Summary({ plan }: { plan: Plan }) {
   const byDateAndMeal = getByDateAndMeal(plan);
 

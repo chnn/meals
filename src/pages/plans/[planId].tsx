@@ -7,6 +7,7 @@ import { ShoppingList } from "../../components/ShoppingList";
 
 import { fetchPlan } from "../../util/plan";
 import type { Plan, Recipe as RecipeT } from "../../util/plan";
+import { Badge } from "../../components/Badge";
 
 function anchorForRecipe(recipe: RecipeT): string {
   return recipe.name.replace(/\s/g, "");
@@ -16,14 +17,16 @@ function Header({
   level,
   id,
   children,
+  className = "",
 }: {
   level: 2 | 3;
   id?: string;
-  children: string;
+  children: any;
+  className?: string;
 }) {
   if (level === 2) {
     return (
-      <h2 id={id} className="text-3xl pb-5 pt-8 first:pt-0">
+      <h2 id={id} className={`text-3xl pb-5 pt-8 first:pt-0 ${className}`}>
         {children}
       </h2>
     );
@@ -31,7 +34,10 @@ function Header({
 
   if (level === 3) {
     return (
-      <h3 id={id} className="text-xl pb-5 font-semibold pt-8 first:pt-0">
+      <h3
+        id={id}
+        className={`text-xl pb-5 font-semibold pt-8 first:pt-0 ${className}`}
+      >
         {children}
       </h3>
     );
@@ -95,13 +101,16 @@ const PlanPage: NextPage<{ plan: Plan }> = ({ plan }) => {
       <Header level={2} id="recipes">
         Recipes
       </Header>
-      <p>Each recipe is for 1 serving.</p>
       {recipes
         .filter((r) => !r.trivial)
         .map((r) => (
           <Fragment key={r.name}>
-            <Header level={3} id={anchorForRecipe(r)}>
-              {r.name}
+            <Header
+              level={3}
+              id={anchorForRecipe(r)}
+              className="flex items-bottom"
+            >
+              <Badge className="text-xs mr-2">1 serving</Badge> {r.name}
             </Header>
             <Recipe recipe={r} plan={plan} />
           </Fragment>
