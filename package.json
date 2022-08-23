@@ -10,12 +10,15 @@
   },
   "dependencies": {
     "airtable": "^0.11.4",
+    "d3": "^7.6.1",
     "next": "12.2.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-query": "^3.39.2",
     "temporal-polyfill": "^0.0.7"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.0",
     "@types/node": "18.7.9",
     "@types/react": "18.0.17",
     "@types/react-dom": "18.0.6",
