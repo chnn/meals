@@ -1,5 +1,6 @@
 import type { NextPage } from "next";
 import { useQuery } from "react-query";
+import { VisuallyHidden } from "react-aria";
 
 import { Chart } from "../../components/Chart";
 import { AutoSizer } from "../../components/AutoSizer";
@@ -61,7 +62,9 @@ const LocationPage: NextPage = () => {
           </AutoSizer>
         </div>
       ) : (
-        "Loading..."
+        <div className="w-full h-[400px] bg-slate-50 animate-pulse">
+          <VisuallyHidden>Loading...</VisuallyHidden>
+        </div>
       )}
     </div>
   );
