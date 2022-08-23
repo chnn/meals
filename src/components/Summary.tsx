@@ -1,12 +1,15 @@
+import { VisuallyHidden } from "react-aria";
 import { Table } from "./Table";
 import { Plan, Recipe } from "../util/plan";
 import { formatPlainDate } from "../util/formatPlainDate";
 
+type RecipeWithServings = Recipe & { servings: number };
+
 type Report = {
   [date: string]: {
-    breakfast: Recipe[];
-    lunch: Recipe[];
-    dinner: Recipe[];
+    breakfast: RecipeWithServings[];
+    lunch: RecipeWithServings[];
+    dinner: RecipeWithServings[];
     totalCal: number;
   };
 };
@@ -24,7 +27,10 @@ function getByDateAndMeal(plan: Plan): Report {
       };
     }
 
-    const recipes = meal.recipes.map((id) => plan.recipes[id]);
+    const recipes: RecipeWithServings[] = meal.recipes.map((id) => ({
+      ...plan.recipes[id],
+      servings: meal.servings,
+    }));
 
     result[meal.date][meal.meal].push(...recipes);
     result[meal.date][meal.meal].sort((a, b) => a.name.localeCompare(b.name));
@@ -39,9 +45,15 @@ function getByDateAndMeal(plan: Plan): Report {
 
 function MealList({ recipes }: { recipes: Recipe[] }) {
   return (
-    <ul className="list-disc list-inside">
-      {recipes.map(({ name }) => (
-        <li key={name}>{name}</li>
+    <ul>
+      {recipes.map(({ name, servings }) => (
+        <li key={name} className="flex items-center justify-start">
+          <div className="uppercase font-medium bg-indigo-50 text-slate-700 px-1 text-xs rounded-lg mr-1 mt-[2px]">
+            <span aria-hidden>{servings}&times;</span>
+            <VisuallyHidden>{servings} servings</VisuallyHidden>
+          </div>{" "}
+          {name}
+        </li>
       ))}
     </ul>
   );
@@ -55,9 +67,9 @@ export function Summary({ plan }: { plan: Plan }) {
       <Table.Header>
         <Table.Row>
           <Table.Th className="w-40">Date</Table.Th>
-          <Table.Th className="w-[20rem]">Breakfast</Table.Th>
-          <Table.Th className="w-[20rem]">Lunch</Table.Th>
-          <Table.Th className="w-[20rem]">Dinner</Table.Th>
+          <Table.Th className="w-[22rem]">Breakfast</Table.Th>
+          <Table.Th className="w-[22rem]">Lunch</Table.Th>
+          <Table.Th className="w-[22rem]">Dinner</Table.Th>
           <Table.Th className="w-28" numeric>
             Cal
           </Table.Th>
