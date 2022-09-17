@@ -60,8 +60,6 @@ function MealList({ recipes }: { recipes: Recipe[] }) {
 }
 
 export function Summary({ plan }: { plan: Plan }) {
-  const byDateAndMeal = getByDateAndMeal(plan);
-
   return (
     <Table>
       <Table.Header>
@@ -79,7 +77,7 @@ export function Summary({ plan }: { plan: Plan }) {
       <Table.Body>
         {Object.entries(getByDateAndMeal(plan))
           .sort((a, b) => a[0].localeCompare(b[0]))
-          .map(([date, meals], i) => (
+          .map(([date, meals]) => (
             <Table.Row key={date}>
               <Table.Td>{formatPlainDate(date, { dayOfWeek: true })}</Table.Td>
               <Table.Td>

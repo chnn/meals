@@ -12,6 +12,7 @@ import {
 } from "d3";
 import type { ScaleLinear, ScaleSequential, ScaleTime } from "d3";
 import { Temporal } from "temporal-polyfill";
+import SunCalc from "suncalc";
 
 import type { TimeSeries, Dimensions, Point } from "../util/weather";
 
@@ -154,13 +155,11 @@ const DayLabel = ({ time, x, y }: { time: number; x: number; y: number }) => {
 };
 
 const AxesAndTicks = ({
-  spacing,
   width,
   height,
   xTicks,
   yTicks,
 }: {
-  spacing: { top: number; right: number; bottom: number; left: number };
   width: number;
   height: number;
   xTicks: number[];
@@ -202,6 +201,44 @@ const AxesAndTicks = ({
           x2={width}
           y1={tick}
           y2={tick}
+        />
+      ))}
+    </>
+  );
+};
+
+const NighttimeShading = ({
+  dayBoundaries,
+  lat,
+  lon,
+  height,
+  xScale,
+}: {
+  dayBoundaries: DayBoundaries;
+  lat: number;
+  lon: number;
+  height: number;
+  xScale: ScaleTime<number, number>;
+}) => {
+  const nighttimes = dayBoundaries.flatMap(([d0, d1]) => {
+    const { sunrise, sunset } = SunCalc.getTimes(new Date(d1), lat, lon);
+
+    return [
+      [d0, sunrise.getTime()],
+      [sunset.getTime(), d1],
+    ];
+  });
+
+  return (
+    <>
+      {nighttimes.map(([t0, t1]) => (
+        <rect
+          key={t0}
+          className="fill-zinc-500 opacity-5"
+          x={xScale(t0)}
+          y={0}
+          height={height}
+          width={Math.abs(xScale(t1) - xScale(t0))}
         />
       ))}
     </>
@@ -313,7 +350,9 @@ export const Chart = ({
   tss,
   height,
   width,
-}: { tss: TimeSeries[] } & Dimensions) => {
+  lat,
+  lon,
+}: { tss: TimeSeries[]; lat: number; lon: number } & Dimensions) => {
   width = width < 1000 ? 1200 : width;
 
   const outerSpacing = { top: 0, right: 0, bottom: 18, left: 0 };
@@ -343,50 +382,54 @@ export const Chart = ({
   );
 
   return (
-    <>
-      <svg className={styles.chart} width={width} height={height}>
-        {dayBoundaries.map(([t0, t1]) => (
-          <DayLabel
-            key={t0}
-            time={t0}
-            x={outerSpacing.left + xScale(t0 + (t1 - t0) / 2)}
-            y={height - 2}
-          />
+    <svg className={styles.chart} width={width} height={height}>
+      {dayBoundaries.map(([t0, t1]) => (
+        <DayLabel
+          key={t0}
+          time={t0}
+          x={outerSpacing.left + xScale(t0 + (t1 - t0) / 2)}
+          y={height - 2}
+        />
+      ))}
+      <g transform={`translate(${outerSpacing.left},${outerSpacing.top})`}>
+        <AxesAndTicks
+          width={innerWidth}
+          height={innerHeight}
+          xTicks={dayBoundaries.map(([d0]) => d0).map((x) => xScale(x))}
+          yTicks={yScale.ticks(5).map((y) => yScale(y))}
+        />
+        <NighttimeShading
+          dayBoundaries={dayBoundaries}
+          lat={lat}
+          lon={lon}
+          height={innerHeight}
+          xScale={xScale}
+        />
+        {tss.map((ts) => (
+          <Fragment key={ts.label}>
+            <TsPath
+              points={ts.points}
+              xScale={xScale}
+              yScale={yScale}
+              colorScale={COLOR_SCALE_BY_TS_LABEL[ts.label]}
+            />
+            <>
+              {extremePointsByTs[ts.label].map((p) => (
+                <PointLabel
+                  key={p.i}
+                  point={p}
+                  points={ts.points}
+                  x={xScale(p.time)}
+                  y={yScale(p.value)}
+                  width={width}
+                  height={height}
+                  color={COLOR_SCALE_BY_TS_LABEL[ts.label](p.value)}
+                />
+              ))}
+            </>
+          </Fragment>
         ))}
-        <g transform={`translate(${outerSpacing.left},${outerSpacing.top})`}>
-          <AxesAndTicks
-            spacing={outerSpacing}
-            width={innerWidth}
-            height={innerHeight}
-            xTicks={dayBoundaries.map(([d0]) => d0).map((x) => xScale(x))}
-            yTicks={yScale.ticks(5).map((y) => yScale(y))}
-          />
-          {tss.map((ts) => (
-            <Fragment key={ts.label}>
-              <TsPath
-                points={ts.points}
-                xScale={xScale}
-                yScale={yScale}
-                colorScale={COLOR_SCALE_BY_TS_LABEL[ts.label]}
-              />
-              <>
-                {extremePointsByTs[ts.label].map((p) => (
-                  <PointLabel
-                    key={p.i}
-                    point={p}
-                    points={ts.points}
-                    x={xScale(p.time)}
-                    y={yScale(p.value)}
-                    width={width}
-                    height={height}
-                    color={COLOR_SCALE_BY_TS_LABEL[ts.label](p.value)}
-                  />
-                ))}
-              </>
-            </Fragment>
-          ))}
-        </g>
-      </svg>
-    </>
+      </g>
+    </svg>
   );
 };

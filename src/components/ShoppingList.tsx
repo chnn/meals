@@ -76,7 +76,7 @@ export function ShoppingList({ plan }: { plan: Plan }) {
         </Table.Row>
       </Table.Header>
       <Table.Body>
-        {shoppingList.map((item, i) => {
+        {shoppingList.map((item) => {
           return (
             <Table.Row key={item.key}>
               <Table.Td>

@@ -49,7 +49,7 @@ export const LocalStorageCheckbox = ({
       className={className}
       type="checkbox"
       checked={isChecked(itemKey)}
-      onChange={(e) => {
+      onChange={() => {
         handleCheck(itemKey, !isChecked(itemKey));
         forceRender();
       }}

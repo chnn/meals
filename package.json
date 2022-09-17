@@ -16,6 +16,7 @@
     "react-aria": "^3.18.0",
     "react-dom": "18.2.0",
     "react-query": "^3.39.2",
+    "suncalc": "^1.9.0",
     "temporal-polyfill": "^0.0.7"
   },
   "devDependencies": {
@@ -23,6 +24,7 @@
     "@types/node": "18.7.9",
     "@types/react": "18.0.17",
     "@types/react-dom": "18.0.6",
+    "@types/suncalc": "^1.8.1",
     "autoprefixer": "^10.4.8",
     "eslint": "8.22.0",
     "eslint-config-next": "12.2.5",

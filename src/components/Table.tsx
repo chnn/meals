@@ -1,5 +1,3 @@
-import classNames from "./Table.module.css";
-
 type Children = JSX.Element | JSX.Element[] | string | number;
 
 const Header = ({ children }: { children?: Children }) => {
