@@ -16,8 +16,6 @@ import SunCalc from "suncalc";
 
 import type { TimeSeries, Dimensions, Point } from "../util/weather";
 
-import styles from "./Chart.module.css";
-
 type DayBoundaries = Array<[number, number]>;
 
 const COLOR_SCALE_BY_TS_LABEL: { [tsLabel: string]: ScaleSequential<string> } =
@@ -148,7 +146,7 @@ const DayLabel = ({ time, x, y }: { time: number; x: number; y: number }) => {
     );
 
   return (
-    <text key={time} className={styles.xTickLabel} x={x} y={y}>
+    <text key={time} className="[text-anchor:middle] font-normal" x={x} y={y}>
       {DAY_OF_WEEK_LABELS[dateTime.dayOfWeek]} {dateTime.month}/{dateTime.day}
     </text>
   );
@@ -168,16 +166,28 @@ const AxesAndTicks = ({
   return (
     <>
       <line
-        className={styles.chartAxis}
+        className="stroke-stone-200 stroke-1"
         x1={0}
         x2={width}
         y1={height}
         y2={height}
       />
-      <line className={styles.chartAxis} x1={0} x2={width} y1={0} y2={0} />
-      <line className={styles.chartAxis} x1={0} x2={0} y1={0} y2={height} />
       <line
-        className={styles.chartAxis}
+        className="stroke-stone-200 stroke-1"
+        x1={0}
+        x2={width}
+        y1={0}
+        y2={0}
+      />
+      <line
+        className="stroke-stone-200 stroke-1"
+        x1={0}
+        x2={0}
+        y1={0}
+        y2={height}
+      />
+      <line
+        className="stroke-stone-200 stroke-1"
         x1={width}
         x2={width}
         y1={0}
@@ -186,7 +196,7 @@ const AxesAndTicks = ({
       {xTicks.map((tick) => (
         <line
           key={tick.valueOf()}
-          className={styles.chartTick}
+          className="stroke-stone-100 stroke-1"
           x1={tick}
           x2={tick}
           y1={0}
@@ -196,7 +206,7 @@ const AxesAndTicks = ({
       {yTicks.map((tick) => (
         <line
           key={tick}
-          className={styles.chartTick}
+          className="stroke-stone-100 stroke-1"
           x1={0}
           x2={width}
           y1={tick}
@@ -234,7 +244,7 @@ const NighttimeShading = ({
       {nighttimes.map(([t0, t1]) => (
         <rect
           key={t0}
-          className="fill-zinc-500 opacity-5"
+          className="fill-stone-500 opacity-5"
           x={xScale(t0)}
           y={0}
           height={height}
@@ -333,7 +343,6 @@ const PointLabel = ({
         strokeWidth="2"
       ></circle>
       <text
-        className={styles.pointLabel}
         x={x + dx}
         y={y + dy}
         fill={color}
@@ -382,7 +391,7 @@ export const Chart = ({
   );
 
   return (
-    <svg className={styles.chart} width={width} height={height}>
+    <svg className="text-sm font-bold" width={width} height={height}>
       {dayBoundaries.map(([t0, t1]) => (
         <DayLabel
           key={t0}
