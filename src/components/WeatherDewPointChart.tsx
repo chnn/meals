@@ -1,17 +1,9 @@
 import { useQuery } from "react-query";
-import { VisuallyHidden } from "react-aria";
 
 import { Chart } from "./Chart";
 import { AutoSizer } from "./AutoSizer";
 import { fetchForecast, TimeSeries } from "../util/weather";
-
-export const LoadingWeatherDewPointChart = () => {
-  return (
-    <div className="w-full h-[400px] bg-slate-50 animate-pulse">
-      <VisuallyHidden>Loading...</VisuallyHidden>
-    </div>
-  );
-};
+import { LoadingChart } from "./LoadingChart";
 
 export const WeatherDewPointChart = ({
   coordinates,
@@ -25,7 +17,7 @@ export const WeatherDewPointChart = ({
   );
 
   if (!forecastQuery.data) {
-    return <LoadingWeatherDewPointChart />;
+    return <LoadingChart text="Loading..." />;
   }
 
   const oneDayFromNow = Date.now() + 1000 * 60 * 60 * 24;

@@ -4,10 +4,8 @@ import { useState } from "react";
 
 import { Heading } from "../../components/Heading";
 import { DayOrWeekToggle } from "../../components/DayOrWeekToggle";
-import {
-  WeatherDewPointChart,
-  LoadingWeatherDewPointChart,
-} from "../../components/WeatherDewPointChart";
+import { WeatherDewPointChart } from "../../components/WeatherDewPointChart";
+import { LoadingChart } from "../../components/LoadingChart";
 
 const COORDINATES_REGEX = /-?\d\d?\d?\.\d\d\d\d,-?\d\d?\d?\.\d\d\d\d/;
 
@@ -36,8 +34,16 @@ const LocationPage: NextPage = () => {
       {coordinates && COORDINATES_REGEX.test(coordinates) ? (
         <WeatherDewPointChart coordinates={coordinates} dayOrWeek={dayOrWeek} />
       ) : (
-        <LoadingWeatherDewPointChart />
+        <LoadingChart text="Loading..." />
       )}
+      <Heading level={2} className="px-5 mt-12 lg:px-0">
+        Precipitation & Sky Cover
+      </Heading>
+      <LoadingChart text="Not implemented" />
+      <Heading level={2} className="px-5 mt-12 lg:px-0">
+        Wind
+      </Heading>
+      <LoadingChart text="Not implemented" />
     </div>
   );
 };
