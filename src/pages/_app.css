@@ -5,3 +5,7 @@
 html {
   -webkit-font-smoothing: antialiased;
 }
+
+.crisp-edges {
+  shape-rendering: crispEdges;
+}

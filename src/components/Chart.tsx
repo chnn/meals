@@ -255,6 +255,26 @@ const NighttimeShading = ({
   );
 };
 
+const NowTick = ({
+  xScale,
+  height,
+}: {
+  xScale: ScaleTime<number, number>;
+  height: number;
+}) => {
+  const x = xScale(Date.now());
+
+  return (
+    <line
+      x1={x}
+      x2={x}
+      y1={0}
+      y2={height}
+      className="stroke-red-300 crisp-edges"
+    />
+  );
+};
+
 const TsPath = ({
   points,
   xScale,
@@ -414,6 +434,7 @@ export const Chart = ({
           height={innerHeight}
           xScale={xScale}
         />
+        <NowTick xScale={xScale} height={innerHeight} />
         {tss.map((ts) => (
           <Fragment key={ts.label}>
             <TsPath
