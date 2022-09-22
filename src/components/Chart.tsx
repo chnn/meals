@@ -16,7 +16,7 @@ import SunCalc from "suncalc";
 
 import type { TimeSeries, Dimensions, Point } from "../util/weather";
 
-type DayBoundaries = Array<[number, number]>;
+type Boundaries = Array<[number, number]>;
 
 const COLOR_SCALE_BY_TS_LABEL: { [tsLabel: string]: ScaleSequential<string> } =
   {
@@ -26,10 +26,11 @@ const COLOR_SCALE_BY_TS_LABEL: { [tsLabel: string]: ScaleSequential<string> } =
 
 const cToF = (c: number): number => (c * 9) / 5 + 32;
 
-const getDayBoundaries = (
+const getBoundaries = (
   startTime: number,
-  endTime: number
-): DayBoundaries => {
+  endTime: number,
+  period: "hour" | "day"
+): Boundaries => {
   const startDateTime =
     Temporal.Instant.fromEpochMilliseconds(startTime).toZonedDateTimeISO(
       "America/New_York"
@@ -40,15 +41,18 @@ const getDayBoundaries = (
       "America/New_York"
     );
 
-  const boundaries: DayBoundaries = [];
-  let currentBoundary = startDateTime.startOfDay();
+  const boundaries: Boundaries = [];
+  let currentBoundary = startDateTime.round({
+    smallestUnit: period,
+    roundingMode: "floor",
+  });
 
   while (
     endDateTime.epochMilliseconds - currentBoundary.epochMilliseconds >
     0
   ) {
     const boundaryStart = currentBoundary.epochMilliseconds;
-    currentBoundary = currentBoundary.add("P1D");
+    currentBoundary = currentBoundary.add(period === "day" ? "P1D" : "PT1H");
     const boundaryEnd = currentBoundary.epochMilliseconds;
     boundaries.push([boundaryStart, boundaryEnd]);
   }
@@ -129,7 +133,9 @@ const getPointLabelPositioning = (
   };
 };
 
-const DayLabel = ({ time, x, y }: { time: number; x: number; y: number }) => {
+const TIME_ZONE = "America/New_York";
+
+const formatDayOfWeek = (time: number): string => {
   const DAY_OF_WEEK_LABELS: { [n: number]: string } = {
     1: "M",
     2: "Tu",
@@ -141,13 +147,39 @@ const DayLabel = ({ time, x, y }: { time: number; x: number; y: number }) => {
   };
 
   const dateTime =
-    Temporal.Instant.fromEpochMilliseconds(time).toZonedDateTimeISO(
-      "America/New_York"
-    );
+    Temporal.Instant.fromEpochMilliseconds(time).toZonedDateTimeISO(TIME_ZONE);
 
+  return `${DAY_OF_WEEK_LABELS[dateTime.dayOfWeek]} ${dateTime.month}/${
+    dateTime.day
+  }`;
+};
+
+const formatTimeOfDay = (time: number): string => {
+  const dateTime =
+    Temporal.Instant.fromEpochMilliseconds(time).toZonedDateTimeISO(TIME_ZONE);
+
+  return `${dateTime.hour}`;
+};
+
+const Label = ({
+  time,
+  x,
+  y,
+  children,
+}: {
+  time: number;
+  x: number;
+  y: number;
+  children: React.ReactNode;
+}) => {
   return (
-    <text key={time} className="[text-anchor:middle] font-normal" x={x} y={y}>
-      {DAY_OF_WEEK_LABELS[dateTime.dayOfWeek]} {dateTime.month}/{dateTime.day}
+    <text
+      key={time}
+      className="[text-anchor:middle] font-semibold text-xs fill-stone-600"
+      x={x}
+      y={y}
+    >
+      {children}
     </text>
   );
 };
@@ -224,7 +256,7 @@ const NighttimeShading = ({
   height,
   xScale,
 }: {
-  dayBoundaries: DayBoundaries;
+  dayBoundaries: Boundaries;
   lat: number;
   lon: number;
   height: number;
@@ -252,26 +284,6 @@ const NighttimeShading = ({
         />
       ))}
     </>
-  );
-};
-
-const NowTick = ({
-  xScale,
-  height,
-}: {
-  xScale: ScaleTime<number, number>;
-  height: number;
-}) => {
-  const x = xScale(Date.now());
-
-  return (
-    <line
-      x1={x}
-      x2={x}
-      y1={0}
-      y2={height}
-      className="stroke-red-300 crisp-edges"
-    />
   );
 };
 
@@ -381,19 +393,22 @@ export const Chart = ({
   width,
   lat,
   lon,
-}: { tss: TimeSeries[]; lat: number; lon: number } & Dimensions) => {
-  width = width < 1000 ? 1200 : width;
-
+  xDomain,
+  yDomain,
+  dayOrWeek,
+}: {
+  tss: TimeSeries[];
+  lat: number;
+  lon: number;
+  xDomain: [number, number];
+  yDomain: [number, number];
+  dayOrWeek: "day" | "week";
+} & Dimensions) => {
   const outerSpacing = { top: 0, right: 0, bottom: 18, left: 0 };
   const innerSpacing = { top: 30, right: 0, bottom: 30, left: 0 };
 
   const innerWidth = width - outerSpacing.left - outerSpacing.right;
   const innerHeight = height - outerSpacing.top - outerSpacing.bottom;
-
-  const allTimes = tss.map((ts) => ts.points).flat();
-  const allValues = tss.map((ts) => ts.points).flat();
-  const xDomain = extent(allTimes, (d) => d.time) as [number, number];
-  const yDomain = extent(allValues, (d) => d.value) as [number, number];
 
   const xScale = scaleTime()
     .domain(xDomain)
@@ -403,7 +418,13 @@ export const Chart = ({
     .domain(yDomain)
     .range([innerHeight - innerSpacing.bottom, innerSpacing.top]);
 
-  const dayBoundaries = getDayBoundaries(xDomain[0], xDomain[1]);
+  const dayBoundaries = getBoundaries(xDomain[0], xDomain[1], "day");
+
+  const boundaries = getBoundaries(
+    xDomain[0],
+    xDomain[1],
+    dayOrWeek === "day" ? "hour" : "day"
+  );
 
   const extremePointsByTs: { [tsLabel: string]: Point[] } = tss.reduce(
     (acc, ts) => ({ ...acc, [ts.label]: getExtremePoints(ts.points) }),
@@ -412,19 +433,21 @@ export const Chart = ({
 
   return (
     <svg className="text-sm font-bold" width={width} height={height}>
-      {dayBoundaries.map(([t0, t1]) => (
-        <DayLabel
+      {boundaries.map(([t0, t1]) => (
+        <Label
           key={t0}
           time={t0}
           x={outerSpacing.left + xScale(t0 + (t1 - t0) / 2)}
           y={height - 2}
-        />
+        >
+          {dayOrWeek === "day" ? formatTimeOfDay(t0) : formatDayOfWeek(t0)}
+        </Label>
       ))}
       <g transform={`translate(${outerSpacing.left},${outerSpacing.top})`}>
         <AxesAndTicks
           width={innerWidth}
           height={innerHeight}
-          xTicks={dayBoundaries.map(([d0]) => d0).map((x) => xScale(x))}
+          xTicks={boundaries.map(([d0]) => d0).map((x) => xScale(x))}
           yTicks={yScale.ticks(5).map((y) => yScale(y))}
         />
         <NighttimeShading
@@ -434,7 +457,6 @@ export const Chart = ({
           height={innerHeight}
           xScale={xScale}
         />
-        <NowTick xScale={xScale} height={innerHeight} />
         {tss.map((ts) => (
           <Fragment key={ts.label}>
             <TsPath

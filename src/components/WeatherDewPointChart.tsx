@@ -2,8 +2,11 @@ import { useQuery } from "react-query";
 
 import { Chart } from "./Chart";
 import { AutoSizer } from "./AutoSizer";
-import { fetchForecast, TimeSeries } from "../util/weather";
+import { fetchForecast } from "../util/weather";
 import { LoadingChart } from "./LoadingChart";
+import { extent } from "d3";
+
+const DAYS_IN_FORECAST = 7;
 
 export const WeatherDewPointChart = ({
   coordinates,
@@ -20,34 +23,39 @@ export const WeatherDewPointChart = ({
     return <LoadingChart text="Loading..." />;
   }
 
-  const oneDayFromNow = Date.now() + 1000 * 60 * 60 * 24;
-  const oneWeekFromNow = Date.now() + 1000 * 60 * 60 * 24 * 7;
-  const onePeriodFromNow = dayOrWeek === "day" ? oneDayFromNow : oneWeekFromNow;
-
-  const filteredTss = Object.values(forecastQuery.data.tss).reduce<
-    TimeSeries[]
-  >((acc, ts) => {
-    return [
-      ...acc,
-      {
-        label: ts.label,
-        points: ts.points.filter(({ time }) => time < onePeriodFromNow),
-      },
-    ];
-  }, []);
-
   const [lat, lon] = coordinates.split(",").map((s) => +s.trim());
+  const tss = Object.values(forecastQuery.data.tss);
+  const oneHourAgo = Date.now() - 1000 * 60 * 60;
+
+  const xDomain: [number, number] = [
+    oneHourAgo,
+    oneHourAgo + 1000 * 60 * 60 * 24 * DAYS_IN_FORECAST,
+  ];
+
+  const yDomain = extent(tss.map((ts) => ts.points).flat(), (d) => d.value) as [
+    number,
+    number
+  ];
+
+  const dayWidthPx = dayOrWeek === "day" ? 750 : 200;
 
   return (
     <div className="w-full overflow-x-scroll overflow-y-hidden">
       <AutoSizer>
         {({ width }) => (
           <Chart
-            width={width}
-            height={400}
-            tss={filteredTss}
+            tss={tss}
+            xDomain={xDomain}
+            yDomain={yDomain}
             lat={lat}
             lon={lon}
+            width={
+              dayWidthPx * DAYS_IN_FORECAST < width
+                ? width
+                : dayWidthPx * DAYS_IN_FORECAST
+            }
+            height={400}
+            dayOrWeek={dayOrWeek}
           />
         )}
       </AutoSizer>
