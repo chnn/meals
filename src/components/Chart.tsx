@@ -9,6 +9,8 @@ import {
   scaleTime,
   scaleSequential,
   interpolateTurbo,
+  maxIndex,
+  minIndex,
 } from "d3";
 import type { ScaleLinear, ScaleSequential, ScaleTime } from "d3";
 import { Temporal } from "temporal-polyfill";
@@ -60,7 +62,19 @@ const getBoundaries = (
   return boundaries;
 };
 
-const getExtremePoints = (points: Point[]): Point[] => {
+const getExtremePoints = (
+  points: Point[],
+  dayBoundaries: Boundaries
+): Point[] => {
+  return dayBoundaries.flatMap(([t0, t1]) => {
+    const pointsInDay = points.filter((p) => p.time >= t0 && p.time < t1);
+
+    const maxPoint = pointsInDay[maxIndex(pointsInDay, (p) => p.value)];
+    const minPoint = pointsInDay[minIndex(pointsInDay, (p) => p.value)];
+
+    return [minPoint, maxPoint].filter((p) => p.time !== t0);
+  });
+
   return points
     .filter(
       // Find inflection points
@@ -78,7 +92,7 @@ const getPointLabelPositioning = (
   dx: number;
   dy: number;
   textAnchor?: SVGAttributes<SVGTextElement>["textAnchor"];
-  alignmentBaseline?: SVGAttributes<SVGTextElement>["alignmentBaseline"];
+  dominantBaseline?: SVGAttributes<SVGTextElement>["dominantBaseline"];
 } => {
   const D = 10;
 
@@ -103,7 +117,7 @@ const getPointLabelPositioning = (
   if (p0 > p && p1 > p) {
     return {
       textAnchor: "middle",
-      alignmentBaseline: "hanging",
+      dominantBaseline: "hanging",
       dx: 0,
       dy: D,
     } as const;
@@ -112,7 +126,7 @@ const getPointLabelPositioning = (
   if (p0 < p && p1 > p) {
     return {
       textAnchor: "end",
-      alignmentBaseline: "middle",
+      dominantBaseline: "middle",
       dx: -D,
       dy: -D,
     } as const;
@@ -121,7 +135,7 @@ const getPointLabelPositioning = (
   if (p0 > p && p1 < p) {
     return {
       textAnchor: "start",
-      alignmentBaseline: "middle",
+      dominantBaseline: "middle",
       dx: D,
       dy: -D,
     } as const;
@@ -175,7 +189,7 @@ const Label = ({
   return (
     <text
       key={time}
-      className="[text-anchor:middle] font-semibold text-xs fill-stone-600"
+      className="[text-anchor:middle] font-semibold text-xs fill-stone-500"
       x={x}
       y={y}
     >
@@ -184,7 +198,7 @@ const Label = ({
   );
 };
 
-const AxesAndTicks = ({
+const Ticks = ({
   width,
   height,
   xTicks,
@@ -197,34 +211,6 @@ const AxesAndTicks = ({
 }) => {
   return (
     <>
-      <line
-        className="stroke-stone-200 stroke-1"
-        x1={0}
-        x2={width}
-        y1={height}
-        y2={height}
-      />
-      <line
-        className="stroke-stone-200 stroke-1"
-        x1={0}
-        x2={width}
-        y1={0}
-        y2={0}
-      />
-      <line
-        className="stroke-stone-200 stroke-1"
-        x1={0}
-        x2={0}
-        y1={0}
-        y2={height}
-      />
-      <line
-        className="stroke-stone-200 stroke-1"
-        x1={width}
-        x2={width}
-        y1={0}
-        y2={height}
-      />
       {xTicks.map((tick) => (
         <line
           key={tick.valueOf()}
@@ -350,7 +336,7 @@ const PointLabel = ({
   // If a label inside the chart is this close to one of the borders, we hide it
   const MIN_SPACE_FOR_INNER_LABELS = 30; // px
 
-  const { alignmentBaseline, textAnchor, dx, dy } = getPointLabelPositioning(
+  const { dominantBaseline, textAnchor, dx, dy } = getPointLabelPositioning(
     point,
     points
   );
@@ -378,8 +364,9 @@ const PointLabel = ({
         x={x + dx}
         y={y + dy}
         fill={color}
-        alignmentBaseline={alignmentBaseline}
+        dominantBaseline={dominantBaseline}
         textAnchor={textAnchor}
+        className="text-sm"
       >
         {Math.round(cToF(point.value))}º
       </text>
@@ -426,8 +413,16 @@ export const Chart = ({
     dayOrWeek === "day" ? "hour" : "day"
   );
 
-  const extremePointsByTs: { [tsLabel: string]: Point[] } = tss.reduce(
-    (acc, ts) => ({ ...acc, [ts.label]: getExtremePoints(ts.points) }),
+  const pointsByLabel: { [tsLabel: string]: Point[] } = tss.reduce(
+    (acc, ts) => {
+      return {
+        ...acc,
+        [ts.label]:
+          dayOrWeek === "day"
+            ? ts.points
+            : getExtremePoints(ts.points, dayBoundaries),
+      };
+    },
     {}
   );
 
@@ -444,7 +439,14 @@ export const Chart = ({
         </Label>
       ))}
       <g transform={`translate(${outerSpacing.left},${outerSpacing.top})`}>
-        <AxesAndTicks
+        <rect
+          x={1}
+          y={1}
+          width={innerWidth - 2}
+          height={innerHeight - 2}
+          className="stroke-stone-100 stroke-1 fill-transparent crisp-edges"
+        />
+        <Ticks
           width={innerWidth}
           height={innerHeight}
           xTicks={boundaries.map(([d0]) => d0).map((x) => xScale(x))}
@@ -466,7 +468,7 @@ export const Chart = ({
               colorScale={COLOR_SCALE_BY_TS_LABEL[ts.label]}
             />
             <>
-              {extremePointsByTs[ts.label].map((p) => (
+              {pointsByLabel[ts.label].map((p) => (
                 <PointLabel
                   key={p.i}
                   point={p}
