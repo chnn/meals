@@ -31,7 +31,9 @@ const LocationPage: NextPage = () => {
       <Heading level={2} className="px-5 lg:px-0">
         Temperature & Dew Point
       </Heading>
-      {coordinates && COORDINATES_REGEX.test(coordinates) ? (
+      {coordinates &&
+      COORDINATES_REGEX.test(coordinates) &&
+      typeof window !== "undefined" ? (
         <WeatherDewPointChart coordinates={coordinates} dayOrWeek={dayOrWeek} />
       ) : (
         <LoadingChart text="Loading..." />
