@@ -17,6 +17,7 @@ import { Temporal } from "temporal-polyfill";
 import SunCalc from "suncalc";
 
 import type { TimeSeries, Dimensions, Point } from "../util/weather";
+import { darkenToMinContrast } from "../util/color";
 
 type Boundaries = Array<[number, number]>;
 
@@ -363,7 +364,7 @@ const PointLabel = ({
       <text
         x={x + dx}
         y={y + dy}
-        fill={color}
+        fill={darkenToMinContrast(color, "white", 1.5)}
         dominantBaseline={dominantBaseline}
         textAnchor={textAnchor}
         className="text-sm"
