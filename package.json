@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@internationalized/date": "^3.0.1",
     "airtable": "^0.11.4",
     "d3": "^7.6.1",
     "next": "12.2.5",
@@ -16,8 +17,7 @@
     "react-aria": "^3.18.0",
     "react-dom": "18.2.0",
     "react-query": "^3.39.2",
-    "suncalc": "^1.9.0",
-    "temporal-polyfill": "^0.0.7"
+    "suncalc": "^1.9.0"
   },
   "devDependencies": {
     "@types/d3": "^7.4.0",

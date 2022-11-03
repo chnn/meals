@@ -13,13 +13,20 @@ import {
   minIndex,
 } from "d3";
 import type { ScaleLinear, ScaleSequential, ScaleTime } from "d3";
-import { Temporal } from "temporal-polyfill";
+import {
+  getDayOfWeek,
+  parseAbsolute,
+  ZonedDateTime,
+} from "@internationalized/date";
 import SunCalc from "suncalc";
 
 import type { TimeSeries, Dimensions, Point } from "../util/weather";
 import { darkenToMinContrast } from "../util/color";
 
 type Boundaries = Array<[number, number]>;
+
+const TIME_ZONE = "America/New_York";
+const LOCALE = "en-US";
 
 const COLOR_SCALE_BY_TS_LABEL: { [tsLabel: string]: ScaleSequential<string> } =
   {
@@ -29,34 +36,40 @@ const COLOR_SCALE_BY_TS_LABEL: { [tsLabel: string]: ScaleSequential<string> } =
 
 const cToF = (c: number): number => (c * 9) / 5 + 32;
 
+const unixTimeToZonedDateTime = (t: number): ZonedDateTime => {
+  return parseAbsolute(new Date(t).toISOString(), TIME_ZONE);
+};
+
+const zonedDateTimeToUnixTime = (d: ZonedDateTime): number => {
+  return d.toDate().valueOf();
+};
+
 const getBoundaries = (
   startTime: number,
   endTime: number,
   period: "hour" | "day"
 ): Boundaries => {
-  const startDateTime =
-    Temporal.Instant.fromEpochMilliseconds(startTime).toZonedDateTimeISO(
-      "America/New_York"
-    );
-
-  const endDateTime =
-    Temporal.Instant.fromEpochMilliseconds(endTime).toZonedDateTimeISO(
-      "America/New_York"
-    );
+  const startDateTime = unixTimeToZonedDateTime(startTime);
+  const endDateTime = unixTimeToZonedDateTime(endTime);
 
   const boundaries: Boundaries = [];
-  let currentBoundary = startDateTime.round({
-    smallestUnit: period,
-    roundingMode: "floor",
-  });
+  let currentBoundary = startDateTime.set(
+    {
+      ...(period === "day" ? { hour: 0 } : null),
+      minute: 0,
+      second: 0,
+      millisecond: 0,
+    },
+    "earlier"
+  );
 
-  while (
-    endDateTime.epochMilliseconds - currentBoundary.epochMilliseconds >
-    0
-  ) {
-    const boundaryStart = currentBoundary.epochMilliseconds;
-    currentBoundary = currentBoundary.add(period === "day" ? "P1D" : "PT1H");
-    const boundaryEnd = currentBoundary.epochMilliseconds;
+  while (endDateTime.compare(currentBoundary) >= 0) {
+    const boundaryStart = zonedDateTimeToUnixTime(currentBoundary);
+    currentBoundary = currentBoundary.add(
+      period === "day" ? { days: 1 } : { hours: 1 }
+    );
+
+    const boundaryEnd = zonedDateTimeToUnixTime(currentBoundary);
     boundaries.push([boundaryStart, boundaryEnd]);
   }
 
@@ -75,15 +88,6 @@ const getExtremePoints = (
 
     return [minPoint, maxPoint].filter((p) => p.time !== t0);
   });
-
-  return points
-    .filter(
-      // Find inflection points
-      (p, i) =>
-        (p.value < points[i - 1]?.value && p.value < points[i + 1]?.value) ||
-        (p.value > points[i - 1]?.value && p.value > points[i + 1]?.value)
-    )
-    .filter((p, i, ps) => ps[i - 1]?.i !== p.i - 1); // Filter out points that are too close
 };
 
 const getPointLabelPositioning = (
@@ -148,32 +152,26 @@ const getPointLabelPositioning = (
   };
 };
 
-const TIME_ZONE = "America/New_York";
-
 const formatDayOfWeek = (time: number): string => {
   const DAY_OF_WEEK_LABELS: { [n: number]: string } = {
+    0: "Su",
     1: "M",
     2: "Tu",
     3: "W",
     4: "Th",
     5: "F",
     6: "Sa",
-    7: "Su",
   };
 
-  const dateTime =
-    Temporal.Instant.fromEpochMilliseconds(time).toZonedDateTimeISO(TIME_ZONE);
+  const dateTime = unixTimeToZonedDateTime(time);
 
-  return `${DAY_OF_WEEK_LABELS[dateTime.dayOfWeek]} ${dateTime.month}/${
-    dateTime.day
-  }`;
+  return `${DAY_OF_WEEK_LABELS[getDayOfWeek(dateTime, LOCALE)]} ${
+    dateTime.month
+  }/${dateTime.day}`;
 };
 
 const formatTimeOfDay = (time: number): string => {
-  const dateTime =
-    Temporal.Instant.fromEpochMilliseconds(time).toZonedDateTimeISO(TIME_ZONE);
-
-  return `${dateTime.hour}`;
+  return `${unixTimeToZonedDateTime(time).hour}`;
 };
 
 const Label = ({

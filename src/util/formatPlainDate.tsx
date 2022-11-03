@@ -1,13 +1,15 @@
-import { Temporal } from "temporal-polyfill";
+import { parseDateTime, getDayOfWeek } from "@internationalized/date";
+
+const LOCALE = "en-US";
 
 const DAY_LABELS: Record<number, string> = {
+  0: "Sun",
   1: "Mon",
   2: "Tue",
   3: "Wed",
   4: "Thu",
   5: "Fri",
   6: "Sat",
-  7: "Sun",
 };
 
 const MONTH_LABELS: Record<number, string> = {
@@ -29,15 +31,15 @@ export const formatPlainDate = (
   isoString: string,
   options: { dayOfWeek?: boolean } = {}
 ): string => {
-  const plainDate = Temporal.PlainDate.from(isoString);
+  const dateTime = parseDateTime(isoString);
 
   let formatted = "";
 
   if (options.dayOfWeek) {
-    formatted += `${DAY_LABELS[plainDate.dayOfWeek]}, `;
+    formatted += `${DAY_LABELS[getDayOfWeek(dateTime, LOCALE)]}, `;
   }
 
-  formatted += `${MONTH_LABELS[plainDate.month]} ${plainDate.day}`;
+  formatted += `${MONTH_LABELS[dateTime.month]} ${dateTime.day}`;
 
   return formatted;
 };
