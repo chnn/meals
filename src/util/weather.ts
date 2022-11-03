@@ -1,3 +1,5 @@
+import { range } from "d3";
+
 export type Dimensions = { width: number; height: number };
 
 export type Point = { time: number; value: number; i: number };
@@ -11,12 +13,36 @@ export type WeatherReport = {
   };
 };
 
-const toPoints = (values: any[]) =>
-  values.map(({ validTime, value }, i) => ({
-    time: Date.parse(validTime.slice(0, validTime.indexOf("/"))),
-    value,
-    i,
-  }));
+const DURATION_REGEX = /^PT(?<count>\d\d?\d?)H$/;
+
+const parseDurationHours = (durationString: string): number => {
+  const count = DURATION_REGEX.exec(durationString)?.groups?.count;
+
+  if (!count) {
+    throw new Error(`failed to parse duration string "${durationString}"`);
+  }
+
+  return +count;
+};
+
+const noaaTsToPoints = (values: any[]): Point[] => {
+  const points = values.flatMap(({ validTime, value }) => {
+    const [isoString, durationString] = validTime.split("/");
+    const durationHours = parseDurationHours(durationString);
+
+    const firstTime = Date.parse(isoString);
+
+    return range(1).map((n) => {
+      return { time: firstTime + n * 1000 * 60 * 60, value, i: -1 };
+    });
+  });
+
+  points.forEach((p, i) => {
+    p.i = i;
+  });
+
+  return points;
+};
 
 export const fetchForecast = async (
   coordinates: string
@@ -34,11 +60,11 @@ export const fetchForecast = async (
     tss: {
       temperature: {
         label: "Temperature",
-        points: toPoints(forecastRespBody.properties.temperature.values),
+        points: noaaTsToPoints(forecastRespBody.properties.temperature.values),
       },
       dewpoint: {
         label: "Dew Point",
-        points: toPoints(forecastRespBody.properties.dewpoint.values),
+        points: noaaTsToPoints(forecastRespBody.properties.dewpoint.values),
       },
     },
   };
