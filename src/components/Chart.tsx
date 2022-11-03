@@ -1,5 +1,4 @@
 import { Fragment, useId } from "react";
-import type { SVGAttributes } from "react";
 import {
   curveMonotoneX,
   extent,
@@ -88,68 +87,6 @@ const getExtremePoints = (
 
     return [minPoint, maxPoint].filter((p) => p.time !== t0);
   });
-};
-
-const getPointLabelPositioning = (
-  { i, value: p }: Point,
-  ps: Point[]
-): {
-  dx: number;
-  dy: number;
-  textAnchor?: SVGAttributes<SVGTextElement>["textAnchor"];
-  dominantBaseline?: SVGAttributes<SVGTextElement>["dominantBaseline"];
-} => {
-  const D = 10;
-
-  if (i === 0 || i === ps.length - 1) {
-    return {
-      dx: 0,
-      dy: 0,
-    };
-  }
-
-  const p0 = ps[i - 1].value;
-  const p1 = ps[i + 1].value;
-
-  if (p0 < p && p1 < p) {
-    return {
-      textAnchor: "middle",
-      dx: 0,
-      dy: -D,
-    };
-  }
-
-  if (p0 > p && p1 > p) {
-    return {
-      textAnchor: "middle",
-      dominantBaseline: "hanging",
-      dx: 0,
-      dy: D,
-    } as const;
-  }
-
-  if (p0 < p && p1 > p) {
-    return {
-      textAnchor: "end",
-      dominantBaseline: "middle",
-      dx: -D,
-      dy: -D,
-    } as const;
-  }
-
-  if (p0 > p && p1 < p) {
-    return {
-      textAnchor: "start",
-      dominantBaseline: "middle",
-      dx: D,
-      dy: -D,
-    } as const;
-  }
-
-  return {
-    dx: 0,
-    dy: 0,
-  };
 };
 
 const formatDayOfWeek = (time: number): string => {
@@ -317,28 +254,24 @@ const TsPath = ({
 
 const PointLabel = ({
   point,
-  points,
   x,
   y,
   color,
   width,
   height,
+  position,
 }: {
   point: Point;
-  points: Point[];
   x: number;
   y: number;
   color: string;
   width: number;
   height: number;
+  position: "below" | "above";
 }) => {
   // If a label inside the chart is this close to one of the borders, we hide it
   const MIN_SPACE_FOR_INNER_LABELS = 30; // px
-
-  const { dominantBaseline, textAnchor, dx, dy } = getPointLabelPositioning(
-    point,
-    points
-  );
+  const LABEL_BOTTOM_SPACE = 10;
 
   if (
     x < MIN_SPACE_FOR_INNER_LABELS ||
@@ -348,6 +281,11 @@ const PointLabel = ({
   ) {
     return null;
   }
+
+  const dx = 0;
+  const dy = position === "below" ? LABEL_BOTTOM_SPACE : -LABEL_BOTTOM_SPACE;
+  const textAnchor = "middle";
+  const dominantBaseline = position === "below" ? "hanging" : "auto";
 
   return (
     <>
@@ -471,12 +409,12 @@ export const Chart = ({
                 <PointLabel
                   key={p.i}
                   point={p}
-                  points={ts.points}
                   x={xScale(p.time)}
                   y={yScale(p.value)}
                   width={width}
                   height={height}
                   color={COLOR_SCALE_BY_TS_LABEL[ts.label](p.value)}
+                  position={ts.label === "Dew Point" ? "below" : "above"}
                 />
               ))}
             </>
