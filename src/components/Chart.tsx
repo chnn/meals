@@ -184,13 +184,11 @@ const NighttimeShading = ({
   height: number;
   xScale: ScaleTime<number, number>;
 }) => {
-  const nighttimes = dayBoundaries.flatMap(([d0, d1]) => {
-    const { sunrise, sunset } = SunCalc.getTimes(new Date(d1), lat, lon);
+  const nighttimes = dayBoundaries.map(([d0, d1]) => {
+    const { sunset } = SunCalc.getTimes(new Date(d0), lat, lon);
+    const { sunrise } = SunCalc.getTimes(new Date(d1), lat, lon);
 
-    return [
-      [d0, sunrise.getTime()],
-      [sunset.getTime(), d1],
-    ];
+    return [sunset.getTime(), sunrise.getTime()];
   });
 
   return (
